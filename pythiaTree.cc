@@ -48,8 +48,9 @@ int main(int argc, char* argv[]) {
 
   // Book tree
   TTree t1("t1","a tree");
-  float scet;
-  t1.Branch("scet",&scet,"scet/F");
+  float ncharged,nneutral;
+  t1.Branch("ncharged",&ncharged,"ncharged/F");
+  t1.Branch("nneutral",&nneutral,"nneutral/F");
 
   // Begin event loop. Generate event; skip if generation aborted.
   for (int iEvent = 0; iEvent < 100; ++iEvent) {
@@ -57,13 +58,21 @@ int main(int argc, char* argv[]) {
 
     // Find number of all final charged particles.
     int nCharged = 0;
-    for (int i = 0; i < pythia.event.size(); ++i)
-      if (pythia.event[i].isFinal() && pythia.event[i].isCharged())
+    int nNeutral = 0;
+    for (int i = 0; i < pythia.event.size(); ++i) {
+      //      std::cout<<pythia.event[i].isCharged()<<endl;
+      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()==0)
         ++nCharged;
+
+      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()!=0)
+        ++nNeutral;
+    }
+
 
     // Fill charged multiplicity in histogram. End event loop.
     mult->Fill( nCharged );
-    scet=nCharged;
+    ncharged=nCharged;
+    nneutral=nNeutral;
     t1.Fill();
   }
 
