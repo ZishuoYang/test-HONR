@@ -44,7 +44,9 @@ int main(int argc, char* argv[]) {
   TFile* outFile = new TFile("hist.root", "RECREATE");
 
   // Book histogram.
-  TH1F *mult = new TH1F("mult","charged multiplicity", 100, -0.5, 799.5);
+  TH1F *multch = new TH1F("multch","charged multiplicity", 100, -0.5, 799.5);
+  TH1F *multneu = new TH1F("multneu","neutral multiplicity", 100, -0.5, 799.5);
+  TH1F *ppid = new TH1F("ppid","particle identification number", 1000, -500, 500);
 
   // Book tree
   TTree t1("t1","a tree");
@@ -66,11 +68,14 @@ int main(int argc, char* argv[]) {
 
       if (pythia.event[i].isFinal() && pythia.event[i].isCharged()!=0)
         ++nNeutral;
+
+      if(pythia.event[i].isFinal())
+	ppid->Fill( pythia.event[i].id() );
     }
 
-
     // Fill charged multiplicity in histogram. End event loop.
-    mult->Fill( nCharged );
+    multch->Fill( nCharged );
+    multneu->Fill( nNeutral );
     ncharged=nCharged;
     nneutral=nNeutral;
     t1.Fill();
@@ -79,11 +84,11 @@ int main(int argc, char* argv[]) {
   // Statistics on event generation.
   pythia.stat();
 
-  // Show histogram. Possibility to close it.
-  mult->Draw();
 
   // Save histogram on file and close file.
-  mult->Write();
+  multch->Write();
+  multneu->Write();
+  ppid->Write();
   t1.Write();
   delete outFile;
 
