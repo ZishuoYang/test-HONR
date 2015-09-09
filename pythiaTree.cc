@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
   t1->Branch("Apz",Apx,"Apz[nTot]/F");
 
   // Begin event loop. Generate event; skip if generation aborted.
-  std::cout<<"New Event"<<std::endl;
+  //  std::cout<<"New Event"<<std::endl;
   for (int iEvent = 0; iEvent < 100; ++iEvent) {
     if (!pythia.next()) continue;
 
@@ -96,8 +96,6 @@ int main(int argc, char* argv[]) {
     multch->Fill( nCharged );
     multneu->Fill( nNeutral );
     if(nTot>5000) std::cout<<"Danger Danger Will Robinson"<<std::endl;
-    std::cout<<"  ntot is "<<nTot<<std::endl;
-    for(int k = 0; k<nTot; ++k) std::cout<<"    "<<APID[k]<<std::endl;
     t1->Fill();
   }
 
