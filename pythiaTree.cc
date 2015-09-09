@@ -27,6 +27,13 @@
 
 using namespace Pythia8;
 
+int nCharged, nNeutral, nTot;
+Int_t APID[5000];
+Float_t Apx[5000];
+Float_t Apy[5000];
+Float_t Apz[5000];
+ 
+
 int main(int argc, char* argv[]) {
 
   // Create the ROOT application environment.
@@ -49,36 +56,49 @@ int main(int argc, char* argv[]) {
   TH1F *ppid = new TH1F("ppid","particle identification number", 1000, -500, 500);
 
   // Book tree
-  TTree t1("t1","a tree");
-  float ncharged,nneutral;
-  t1.Branch("ncharged",&ncharged,"ncharged/F");
-  t1.Branch("nneutral",&nneutral,"nneutral/F");
+  TTree* t1= new TTree("t1","a tree");
+  t1->Branch("nCharged",&nCharged,"nCharged/I");
+  t1->Branch("nNeutral",&nNeutral,"nNeutral/I");
+  t1->Branch("nTot",&nTot,"nTot/I");
+  t1->Branch("APID",APID,"APID[nTot]/I");
+  t1->Branch("Apx",Apx,"Apx[nTot]/F");
+  t1->Branch("Apy",Apx,"Apy[nTot]/F");
+  t1->Branch("Apz",Apx,"Apz[nTot]/F");
 
   // Begin event loop. Generate event; skip if generation aborted.
+  std::cout<<"New Event"<<std::endl;
   for (int iEvent = 0; iEvent < 100; ++iEvent) {
     if (!pythia.next()) continue;
 
     // Find number of all final charged particles.
-    int nCharged = 0;
-    int nNeutral = 0;
-    for (int i = 0; i < pythia.event.size(); ++i) {
+    nCharged = 0;  // for counting the number of stable charged particles in the event
+    nNeutral = 0;  // ditto neutral
+    nTot=0;
+    for (int i = 0; i < pythia.event.size(); ++i) {  // loop over all particles in the event
       //      std::cout<<pythia.event[i].isCharged()<<endl;
-      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()==0)
+      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()==0)  // count if stable and charged
         ++nCharged;
 
-      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()!=0)
+      if (pythia.event[i].isFinal() && pythia.event[i].isCharged()!=0) // count if stable and neutral
         ++nNeutral;
 
-      if(pythia.event[i].isFinal())
-	ppid->Fill( pythia.event[i].id() );
+      if(pythia.event[i].isFinal()) {  // if stable
+	ppid->Fill( pythia.event[i].id() );  // get the type of the particle
+	nTot=nTot+1;  //count
+        APID[nTot-1]=pythia.event[i].id();  
+        Apx[nTot-1]=pythia.event[i].px();
+        Apy[nTot-1]=pythia.event[i].py();
+        Apz[nTot-1]=pythia.event[i].pz();
+      }
     }
 
     // Fill charged multiplicity in histogram. End event loop.
     multch->Fill( nCharged );
     multneu->Fill( nNeutral );
-    ncharged=nCharged;
-    nneutral=nNeutral;
-    t1.Fill();
+    if(nTot>5000) std::cout<<"Danger Danger Will Robinson"<<std::endl;
+    std::cout<<"  ntot is "<<nTot<<std::endl;
+    for(int k = 0; k<nTot; ++k) std::cout<<"    "<<APID[k]<<std::endl;
+    t1->Fill();
   }
 
   // Statistics on event generation.
@@ -89,7 +109,7 @@ int main(int argc, char* argv[]) {
   multch->Write();
   multneu->Write();
   ppid->Write();
-  t1.Write();
+  t1->Write();
   delete outFile;
 
   // Done.
